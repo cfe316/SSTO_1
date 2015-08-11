@@ -92,7 +92,7 @@ until runmode = 0 {
 		SAS on.
 		set SASMODE to "PROGRADE".
 		lock pitch to 90 - vectorangle(UP:VECTOR, SHIP:FACING:FOREVECTOR).
-		if pitch < climbPitch{
+		if pitch < climbPitch + 0.5 {
 			set runmode to runmode + 1.
 		}
 	}
@@ -119,14 +119,33 @@ until runmode = 0 {
 	else if runmode = 7 { // The thrust into orbit.
 		// pitch up to raise apoapsis.
 		lock steering to heading (90, 30) + R(0,0,90).
-		// during this stage we rise to 50km, then fall to ~45km,
-		// then finally we keep burning and eventually the apo raises to 100km.
+		// wait until we are falling.
+		if ETA:APOAPSIS > ETA:PERIAPSIS {
+			set runmode to runmode + 1.
+		}
+	}
+
+	else if runmode = 8 { // The thrust into orbit.
+		// wait until we are rising again.
+		if ETA:PERIAPSIS > ETA:APOAPSIS {
+			set runmode to runmode + 1.
+		}
+	}
+
+	else if runmode = 9 { // The thrust into orbit.
+		if ETA:APOAPSIS > 20 {
+			set runmode to runmode + 1.
+		        lock steering to heading (90, 5) + R(0,0,90).
+		}
+	}
+
+	else if runmode = 10 { // The thrust into orbit.
 		if SHIP:APOAPSIS > targetApoapsis {
 			set runmode to runmode + 1.
 		}
 	}
 
-	else if runmode = 8 { // coast to apoapsis.
+	else if runmode = 11 { // coast to apoapsis.
 		lock steering to heading (90, 1) + R(0,0,90).
 		set TVAL to 0.
 		// could also physicswarp to 4x while we're still in atmo.
