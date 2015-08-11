@@ -39,7 +39,7 @@ WHEN jetEngine:GETMODULE("ModuleEnginesFX"):GETFIELD("status") = "Flame-out!" TH
 				// but it's pretty lightweight... I don't even see a change in 
 				//deltaV in KER when it fires..
 				SET fairingpart to SHIP:PARTSTAGGED("airstream")[0].
-				("ModuleProceduralFairing"):DOEVENT("DEPLOY").
+				fairingpart:GETMODULE("ModuleProceduralFairing"):DOEVENT("DEPLOY").
 
 				SET topAntenna to SHIP:PARTSTAGGED("topAntenna")[0].
 				topAntenna:GETMODULE("ModuleRTAntenna"):DOEVENT("ACTIVATE").
@@ -131,22 +131,23 @@ until runmode = 0 {
 		set TVAL to 0.
 		// could also physicswarp to 4x while we're still in atmo.
 		if ETA:APOAPSIS < 60 {
-			set runmode to runmode + 1.
+			set runmode to 12.
+			set apoapsisBeforeBurn to SHIP:APOAPSIS.
 		}
 	}
 
-	else if runmode = 9 {
+	else if runmode = 12 {
 		if ETA:APOAPSIS < 6 or VERTICALSPEED < 0 {
 			set TVAL to 1.
 		}
-		if (SHIP:PERIAPSIS > targetPeriapsis) or (SHIP:PERIAPSIS > targetPeriapsis * 0.98){
+		if (SHIP:PERIAPSIS > targetPeriapsis * 0.98) or (SHIP:APOAPSIS > (apoapsisBeforeBurn + 1000)){
 			set TVAL to 0.
-			set runmode to 10.
+			set runmode to 20.
 		}
 	}
 
 	//end program
-	else if runmode = 10 {
+	else if runmode = 20 {
 		set TVAL to 0.
 		unlock steering.
 		set runmode to 0.
