@@ -1,5 +1,5 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
-
+switch to 0.
 // Start the script in a known configuration.
 SAS on.
 RCS off.
@@ -14,7 +14,7 @@ set targetApoapsis to 100000.
 set targetPeriapsis to 100000.
 
 set pitch to 90. // this variable will be monitored as the gravity turn happens
-set climbPitch to 24. // the pitch for the power climb
+set climbPitch to 22. // the pitch for the power climb
 
 set runmode to 2. // Safety in case we start mid-flight
 if ALT:RADAR < 50 { // Guess is we are waiting for takeoff
@@ -175,5 +175,9 @@ until runmode = 0 {
 	lock throttle to TVAL.
 
 	print "RUNMODE:    " + runmode + "      " at (5,4).
+	set ts to time:seconds.
+	if MOD(FLOOR(ts * 10),10) = 0 {
+	LOG time:seconds + " " + runmode + " " + SHIP:ALTITUDE + " " + SHIP:VELOCITY:SURFACE to mylog.txt.
+	}
 }
 

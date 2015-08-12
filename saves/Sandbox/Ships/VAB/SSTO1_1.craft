@@ -544,7 +544,7 @@ PART
 	symMethod = Radial
 	istg = 5
 	dstg = 0
-	sidx = 0
+	sidx = 2
 	sqor = 5
 	sepI = 0
 	attm = 0
@@ -3083,8 +3083,8 @@ PART
 	sqor = -1
 	sepI = 0
 	attm = 0
-	modCost = 0
-	modMass = 0
+	modCost = 244
+	modMass = 0.0244145
 	modSize = (0.0, 0.0, 0.0)
 	attN = bottom,sasModule_4284190642
 	EVENTS
@@ -3101,11 +3101,11 @@ PART
 		name = kOSProcessor
 		isEnabled = True
 		bootFile = boot.ks
-		diskSpace = 5000
+		diskSpace = 10000
 		baseDiskSpace = 5000
-		baseModuleCost = 0
+		baseModuleCost = 122
 		basePartMass = 0.08
-		additionalCost = 0
+		additionalCost = 244
 		MaxPartId = 100
 		RequiredPower = 0
 		bootFile_UIEditor
@@ -3936,7 +3936,7 @@ PART
 	symMethod = Radial
 	istg = 4
 	dstg = 0
-	sidx = 1
+	sidx = 0
 	sqor = 4
 	sepI = 4
 	attm = 1
@@ -4109,7 +4109,7 @@ PART
 	symMethod = Radial
 	istg = 4
 	dstg = 0
-	sidx = 2
+	sidx = 1
 	sqor = 4
 	sepI = 4
 	attm = 1
