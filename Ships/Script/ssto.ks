@@ -1,5 +1,6 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
 switch to 0.
+set fileNameSuffix to "0".
 // Start the script in a known configuration.
 SAS on.
 RCS off.
@@ -14,7 +15,7 @@ set targetApoapsis to 100000.
 set targetPeriapsis to 100000.
 
 set pitch to 90. // this variable will be monitored as the gravity turn happens
-set climbPitch to 22. // the pitch for the power climb
+set climbPitch to 20. // the pitch for the power climb
 
 set runmode to 2. // Safety in case we start mid-flight
 if ALT:RADAR < 50 { // Guess is we are waiting for takeoff
@@ -111,7 +112,7 @@ until runmode = 0 {
 
 	else if runmode = 6 { // Continuing the thrust into orbit.
 		// The nuke is on and we are climbing at climbPitch.
-		if SHIP:ALTITUDE > 50000 {
+		if SHIP:ALTITUDE > 30000 {
 			set runmode to runmode + 1.
 		}
 	}
@@ -135,18 +136,18 @@ until runmode = 0 {
 	else if runmode = 9 { // The thrust into orbit.
 		if ETA:APOAPSIS > 20 {
 			set runmode to runmode + 1.
-		        lock steering to heading (90, 5) + R(0,0,90).
+		        lock steering to heading(90, 3) + R(0,0,90).
 		}
 	}
 
 	else if runmode = 10 { // The thrust into orbit.
-		if SHIP:APOAPSIS > targetApoapsis {
+		if SHIP:APOAPSIS > (targetApoapsis + 5000) {
 			set runmode to runmode + 1.
 		}
 	}
 
 	else if runmode = 11 { // coast to apoapsis.
-		lock steering to heading (90, 1) + R(0,0,90).
+		lock steering to heading (90, 0) + R(0,0,90).
 		set TVAL to 0.
 		// could also physicswarp to 4x while we're still in atmo.
 		if ETA:APOAPSIS < 60 {
@@ -177,7 +178,7 @@ until runmode = 0 {
 	print "RUNMODE:    " + runmode + "      " at (5,4).
 	set ts to time:seconds.
 	if MOD(FLOOR(ts * 10),10) = 0 {
-	LOG time:seconds + " " + runmode + " " + SHIP:ALTITUDE + " " + SHIP:VELOCITY:SURFACE to mylog.txt.
+	LOG time:seconds + " " + runmode + " " + SHIP:ALTITUDE + " " + SHIP:VELOCITY:ORBIT:MAG + " " + SHIP:APOAPSIS to "mylog"+fileNameSuffix+".txt".
 	}
 }
 
