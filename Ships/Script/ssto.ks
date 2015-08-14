@@ -1,6 +1,6 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
 switch to 0.
-set fileNameSuffix to "0".
+set fileNameSuffix to "02".
 // Start the script in a known configuration.
 SAS on.
 RCS off.
