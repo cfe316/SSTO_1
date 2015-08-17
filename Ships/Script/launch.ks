@@ -1,6 +1,6 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
 switch to 0.
-set fileNameSuffix to "04".
+set fileNameSuffix to "05".
 // Start the script in a known configuration.
 SAS off.
 RCS off.
@@ -103,7 +103,7 @@ until runmode = 0 {
 		wait 0.1.
 		stage.
 		PRINT "Counting down:".
-		FROM {local countdown is 10.} until countdown = 0 STEP {SET countdown to countdown -1.} DO {
+		FROM {local countdown is 12.} until countdown = 0 STEP {SET countdown to countdown -1.} DO {
 			PRINT "..." + countdown.
 			WAIT 1.
 		}
@@ -156,6 +156,25 @@ until runmode = 0 {
 	else if runmode = 7 { // thrust to orbit.
 		lock pitch to th2.
 		if SHIP:APOAPSIS > targetApoapsis  {
+			set runmode to 8.
+		}
+	}
+	else if runmode = 8 { // coast to apoapsis.
+		lock steering to heading (90, 0) + R(0,0,90).
+		set TVAL to 0.
+		// could also physicswarp to 4x while we're still in atmo.
+		if ETA:APOAPSIS < 60 {
+			set runmode to 9.
+			set apoapsisBeforeBurn to SHIP:APOAPSIS.
+		}
+	}
+
+	else if runmode = 9 {
+		if ETA:APOAPSIS < 6 or VERTICALSPEED < 0 {
+			set TVAL to 1.
+		}
+		if (SHIP:PERIAPSIS > targetPeriapsis * 0.98) or (SHIP:APOAPSIS > (apoapsisBeforeBurn + 1000)){
+			set TVAL to 0.
 			set runmode to 10.
 		}
 	}
@@ -178,7 +197,7 @@ until runmode = 0 {
 	print "Y3          " + Y3 + " " at (5,10).
 	set timeseconds to time:seconds.
 	if MOD(FLOOR(timeseconds * 10),10) = 0 {
-	LOG time:seconds + " " + runmode + " " + SHIP:ALTITUDE + " " + SHIP:VELOCITY:ORBIT:MAG + " " + SHIP:APOAPSIS + " " + pitch to "launchlog"+fileNameSuffix+".txt".
+	LOG time:seconds + " " + runmode + " " + SHIP:ALTITUDE + " " + SHIP:VELOCITY:ORBIT:MAG + " " + SHIP:APOAPSIS + " " + pitch + " " + SHIP:PERIAPSIS to "launchlog"+fileNameSuffix+".txt".
 	}
 }
 
