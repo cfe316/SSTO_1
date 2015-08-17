@@ -1,12 +1,14 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
 switch to 0.
-set fileNameSuffix to "05".
+set fileNameSuffix to "09".
 // Start the script in a known configuration.
 SAS off.
 RCS off.
 lights off.
 lock throttle to 0. // Throttle goes from 0.0 to 1.0
 gear off.
+
+set littleg to 9.81.
 
 clearscreen.
 
@@ -15,22 +17,22 @@ set targetApoapsis to 100000.
 set targetPeriapsis to 100000.
 
 //set ascent parameters -------------
-set n to 1.0/2.
-set Y0 to 1500. // height at which th0 is specified for the initial ascent curve
-set th0 to 30. // initial climb pitch angle
+set n to 1.0/3.
+set Y0 to 1000. // height at which th0 is specified for the initial ascent curve
+set th0 to 20. // initial climb pitch angle
 // ts scales the ascent profile function
 set ts to Y0 * (TAN(th0) / n)^(n/(1-n)).
 set X0 to ts * (Y0 / ts)^(1/n).
 set b0 to Y0 - TAN(th0) * X0. 
 // go in a straight line from (X0, Y0) to (X1, Y1). ---------
 set Y1 to 4000.
-set th1 to 24.
+set th1 to 22.
 set turnR to 15000. // radius of circular turn toward level.
 //-----------------------------------
 set X1 to (Y1 - b0)/TAN(th0).
 // find the centerpoint of the circular turn.
 set turnCX to X1 + turnR * SIN(th0).
-set turnCY to X1 - turnR * COS(th0).
+set turnCY to Y1 - turnR * COS(th0).
 set X2 to turnCX - turnR * SIN(th1). // X2, Y2 is location after the first turn.
 set Y2 to turnCY + turnR * COS(th1). 
 set b1 to Y2 - TAN(th1) * X2.
@@ -83,7 +85,7 @@ WHEN ALTITUDE > 20000 THEN {
 					topAntenna:GETMODULE("ModuleRTAntenna"):DOEVENT("ACTIVATE").
 					
 					SET WARP TO 4.
-					WHEN ETA:APOAPSIS < 120 THEN {
+					WHEN ETA:APOAPSIS < 60 THEN {
 						SET WARP TO 0.
 					}
 				}
@@ -92,9 +94,10 @@ WHEN ALTITUDE > 20000 THEN {
 
 set runmode to 1.
 set pitch to 90.
+set twr to 1.
 // This the the main prorgram loop. It runs until the program ends.
 until runmode = 0 {
-
+	
 	if runmode = 1 { // Ship is on the launchpad
 		lock steering to UP + R(0,0,90).
 		// we don't just set TVAL here because this block
@@ -122,7 +125,16 @@ until runmode = 0 {
 	}
 
 	else if runmode = 3 { // go in a straight line until the turn starts.
+		set shipmass to SHIP:MASS * 1000.
+		set thrust to 2 * jetEngine:THRUST * 1000.
+		set twr to thrust / (shipmass * littleg).
+
+		if twr < 2 {
 		lock pitch to th0.
+		} else {
+
+		}
+
 		if SHIP:ALTITUDE > Y1 {
 			// Go to circular turn mode
 			set runmode to runmode + 1.
@@ -193,8 +205,7 @@ until runmode = 0 {
 	print "ts:         " + ts + " " at (5,6).
 	print "Y0          " + Y0 + " " at (5,7).
 	print "Y1          " + Y1 + " " at (5,8).
-	print "Y2          " + Y2 + " " at (5,9).
-	print "Y3          " + Y3 + " " at (5,10).
+	print "twr         " + twr + " " at (5,9).
 	set timeseconds to time:seconds.
 	if MOD(FLOOR(timeseconds * 10),10) = 0 {
 	LOG time:seconds + " " + runmode + " " + SHIP:ALTITUDE + " " + SHIP:VELOCITY:ORBIT:MAG + " " + SHIP:APOAPSIS + " " + pitch + " " + SHIP:PERIAPSIS to "launchlog"+fileNameSuffix+".txt".
