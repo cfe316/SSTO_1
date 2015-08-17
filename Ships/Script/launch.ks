@@ -1,6 +1,6 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
 switch to 0.
-set fileNameSuffix to "09".
+set fileNameSuffix to "10".
 // Start the script in a known configuration.
 SAS off.
 RCS off.
@@ -15,6 +15,8 @@ clearscreen.
 //Set desired orbit parameters.
 set targetApoapsis to 100000.
 set targetPeriapsis to 100000.
+
+set targetApoCorrection to 3000.
 
 //set ascent parameters -------------
 set n to 1.0/3.
@@ -75,20 +77,15 @@ WHEN ALTITUDE > 20000 THEN {
 		// this nested WHEN will start checking after the first one happens.
 		// That way the CPU only has to check for one WHEN event at a time.
 		WHEN SHIP:ALTITUDE > 70010 THEN {
-					// perhaps we could leave the fairing behind earlier, 
-					// but it's pretty lightweight... I don't even see a change in 
-					//deltaV in KER when it fires..
-					SET fairingpart to SHIP:PARTSTAGGED("airstream")[0].
-					fairingpart:GETMODULE("ModuleProceduralFairing"):DOEVENT("DEPLOY").
+			// perhaps we could leave the fairing behind earlier, 
+			// but it's pretty lightweight... I don't even see a change in 
+			//deltaV in KER when it fires..
+			SET fairingpart to SHIP:PARTSTAGGED("airstream")[0].
+			fairingpart:GETMODULE("ModuleProceduralFairing"):DOEVENT("DEPLOY").
 
-					SET topAntenna to SHIP:PARTSTAGGED("topAntenna")[0].
-					topAntenna:GETMODULE("ModuleRTAntenna"):DOEVENT("ACTIVATE").
-					
-					SET WARP TO 4.
-					WHEN ETA:APOAPSIS < 60 THEN {
-						SET WARP TO 0.
-					}
-				}
+			SET topAntenna to SHIP:PARTSTAGGED("topAntenna")[0].
+			topAntenna:GETMODULE("ModuleRTAntenna"):DOEVENT("ACTIVATE").
+		}
 	}
 }
 
@@ -167,32 +164,51 @@ until runmode = 0 {
 
 	else if runmode = 7 { // thrust to orbit.
 		lock pitch to th2.
-		if SHIP:APOAPSIS > targetApoapsis  {
-			set runmode to 8.
+		if SHIP:APOAPSIS > targetApoapsis + targetApoCorrection  {
+			set runmode to runmode + 1.
 		}
 	}
-	else if runmode = 8 { // coast to apoapsis.
-		lock steering to heading (90, 0) + R(0,0,90).
+	else if runmode = 8 { // coast to space.
+		lock steering to SHIP:PROGRADE + R(0,0,90).
 		set TVAL to 0.
 		// could also physicswarp to 4x while we're still in atmo.
+		if SHIP:ALTITUDE > 70000 {
+			set runmode to runmode + 1.
+		}
+	}
+
+	else if runmode = 9 { //apoapsis correction.
+		lock steering to SHIP:PROGRADE + R(0,0,90).
+		set TVAL to 0.05.
+		if SHIP:APOAPSIS > targetApoapsis {
+			set runmode to runmode + 1.
+		}
+	}
+	
+	else if runmode = 10 {
+		lock steering to heading(90,0) + R(0,0,90).
+		lock TVAL to 0.
+		SET WARP TO 4.
+
 		if ETA:APOAPSIS < 60 {
-			set runmode to 9.
+			SET WARP TO 0.
+			set runmode to 11.
 			set apoapsisBeforeBurn to SHIP:APOAPSIS.
 		}
 	}
 
-	else if runmode = 9 {
-		if ETA:APOAPSIS < 6 or VERTICALSPEED < 0 {
+	else if runmode = 11 {
+		if ETA:APOAPSIS < 8 or VERTICALSPEED < 0 {
 			set TVAL to 1.
 		}
 		if (SHIP:PERIAPSIS > targetPeriapsis * 0.98) or (SHIP:APOAPSIS > (apoapsisBeforeBurn + 1000)){
 			set TVAL to 0.
-			set runmode to 10.
+			set runmode to 20.
 		}
 	}
 
 	//end program
-	else if runmode = 10 {
+	else if runmode = 20 {
 		set TVAL to 0.
 		unlock steering.
 		set runmode to 0.
