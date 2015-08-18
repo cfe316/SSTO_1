@@ -20,46 +20,30 @@ set targetApoCorrection to 3000.
 
 //set ascent parameters -------------
 set n to 1.0/3.
-set Y0 to 1000. // height at which th0 is specified for the initial ascent curve
-set th0 to 20. // initial climb pitch angle
+set Y0 to 800. // height at which th0 is specified for the initial ascent curve
+set th0 to 10. // initial climb pitch angle
+set th1 to 22.
+set turn1R to 15000. // radius of circular turn up 
+set Y3 to 25000.
+set th2 to 25. 
+set turn2R to 20000. // radius of 2nd circular turn up.
+
 // ts scales the ascent profile function
 set ts to Y0 * (TAN(th0) / n)^(n/(1-n)).
-set X0 to ts * (Y0 / ts)^(1/n).
-set b0 to Y0 - TAN(th0) * X0. 
-// go in a straight line from (X0, Y0) to (X1, Y1). ---------
-set Y1 to 4000.
-set th1 to 22.
-set turnR to 15000. // radius of circular turn toward level.
-//-----------------------------------
-set X1 to (Y1 - b0)/TAN(th0).
-// find the centerpoint of the circular turn.
-set turnCX to X1 + turnR * SIN(th0).
-set turnCY to Y1 - turnR * COS(th0).
-set X2 to turnCX - turnR * SIN(th1). // X2, Y2 is location after the first turn.
-set Y2 to turnCY + turnR * COS(th1). 
-set b1 to Y2 - TAN(th1) * X2.
-set Y3 to 25000.
-set th2 to 25.
-set turn2R to 20000.
-set X3 to (Y3 - b1)/TAN(th1).
-set turn2CX to X3 - turn2R * SIN(th1).
-set turn2CY to Y3 + turn2R * COS(th1).
-set X4 to turn2CX + turn2R * SIN(th2).
-set Y4 to turn2CY - turn2R * COS(th2).
-
 function initialAscentProfile {
 	parameter y.
 	RETURN ARCTAN(n * (y / ts)^(1 - 1/n)).
 }.
 
-function turn1 {
+function turnUp { //a turn upward
 	parameter y.
-	RETURN ARCTAN(SQRT(turnR^2 - (y - turnCY)^2)/(y-turnCY)).
-}.
-
-function turn2 {
-	parameter y.
-	RETURN ARCTAN(SQRT(turn2R^2 - (y - turn2CY)^2)/(turn2CY - y)).
+	if y < (turnCY - turnR) {
+		RETURN 0.
+	} else if y > turnCY {
+		RETURN 90.
+	} else {
+		RETURN ARCTAN(SQRT(turnR^2 - (y - turnCY)^2)/(turnCY - y)).
+	}
 }.
 
 SET jetEngine to SHIP:PARTSNAMED("turboFanEngine")[0].
@@ -129,18 +113,15 @@ until runmode = 0 {
 		if twr < 2 {
 		lock pitch to th0.
 		} else {
-
-		}
-
-		if SHIP:ALTITUDE > Y1 {
-			// Go to circular turn mode
+			set turnCY to SHIP:ALTITUDE + turn1R * COS(th0).
+			set turnR to turn1R.
 			set runmode to runmode + 1.
 		}
 	}
 
 	else if runmode = 4 { // do the turn.
-		lock pitch to turn1(SHIP:ALTITUDE).
-		if SHIP:ALTITUDE > Y2 {
+		lock pitch to turnUp(SHIP:ALTITUDE).
+		if pitch > th1 {
 			// Go to power climb
 			set runmode to runmode +1.
 		}
@@ -150,13 +131,15 @@ until runmode = 0 {
 		lock pitch to th1.
 		if SHIP:ALTITUDE > Y3 {
 			// Go to turn upwards 
+			set turnCY to SHIP:ALTITUDE + turn2R * COS(th1).
+			set turnR to turn2R.
 			set runmode to runmode +1.
 		}
 	}
 
 	else if runmode = 6 { // do the turn.
-		lock pitch to turn2(SHIP:ALTITUDE).
-		if SHIP:ALTITUDE > Y4 {
+		lock pitch to turnUP(SHIP:ALTITUDE).
+		if pitch > th2 {
 			// Go to thrust into orbit 
 			set runmode to runmode +1.
 		}
@@ -220,7 +203,6 @@ until runmode = 0 {
 	print "pitch:      " + pitch + "       "  at (5,5).
 	print "ts:         " + ts + " " at (5,6).
 	print "Y0          " + Y0 + " " at (5,7).
-	print "Y1          " + Y1 + " " at (5,8).
 	print "twr         " + twr + " " at (5,9).
 	set timeseconds to time:seconds.
 	if MOD(FLOOR(timeseconds * 10),10) = 0 {
