@@ -1,6 +1,6 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
 switch to 0.
-set fileNameSuffix to "10".
+set fileNameSuffix to "12".
 // Start the script in a known configuration.
 SAS off.
 RCS off.
@@ -8,7 +8,8 @@ lights off.
 lock throttle to 0. // Throttle goes from 0.0 to 1.0
 gear off.
 
-set littleg to 9.81.
+set littleg to KERBIN:MU / KERBIN:RADIUS^2.
+set mu to KERBIN:MU.
 
 clearscreen.
 
@@ -25,7 +26,7 @@ set th0 to 10. // initial climb pitch angle
 set th1 to 22.
 set turn1R to 15000. // radius of circular turn up 
 set Y3 to 25000.
-set th2 to 25. 
+set th2 to 25.
 set turn2R to 20000. // radius of 2nd circular turn up.
 
 // ts scales the ascent profile function
@@ -44,6 +45,20 @@ function turnUp { //a turn upward
 	} else {
 		RETURN ARCTAN(SQRT(turnR^2 - (y - turnCY)^2)/(turnCY - y)).
 	}
+}.
+
+function circularizationTime {
+	set currentApo to SHIP:APOAPSIS + KERBIN:RADIUS.
+	set semimaj to (currentApo + SHIP:PERIAPSIS + KERBIN:RADIUS)/2. 
+	set vDesired to SQRT(mu / currentApo).
+	set orbEn to -mu/(2 * semimaj).
+	set vApoCurrent to SQRT(2*(orbEn + mu/currentApo)).
+	set deltaVNeeded to vDesired - vApoCurrent.
+	set nukeThrust to 60.
+	set shipmass to SHIP:MASS.
+	set accPoss to nukeThrust / shipmass.
+	set timeNeeded to deltaVNeeded/accPoss.
+	RETURN timeNeeded.
 }.
 
 SET jetEngine to SHIP:PARTSNAMED("turboFanEngine")[0].
@@ -80,7 +95,6 @@ set twr to 1.
 until runmode = 0 {
 	
 	if runmode = 1 { // Ship is on the launchpad
-		lock steering to UP + R(0,0,90).
 		// we don't just set TVAL here because this block
 		// contains the countdown and launch. It only executes once.
 		lock throttle to 1. set TVAL to 1.
@@ -148,43 +162,56 @@ until runmode = 0 {
 	else if runmode = 7 { // thrust to orbit.
 		lock pitch to th2.
 		if SHIP:APOAPSIS > targetApoapsis + targetApoCorrection  {
+			set thrustOffTime to TIME.
 			set runmode to runmode + 1.
 		}
 	}
 	else if runmode = 8 { // coast to space.
 		lock steering to SHIP:PROGRADE + R(0,0,90).
 		set TVAL to 0.
-		// could also physicswarp to 4x while we're still in atmo.
-		if SHIP:ALTITUDE > 70000 {
+		if (TIME - thrustOffTime) > 10 {
+			set WARPMODE TO "PHYSICS".
+			set WARP TO 3.
 			set runmode to runmode + 1.
 		}
 	}
 
-	else if runmode = 9 { //apoapsis correction.
+	else if runmode = 9 { //warp to edge of atmo.
+		if SHIP:ALTITUDE > 69500 {
+			set WARP to 0.
+			set WARPMODE to "RAILS".
+		}
+		if SHIP:ALTITUDE > 70000 {
+			set runmode to runmode + 1.
+		}
+	}
+	
+	else if runmode = 10 { //apoapsis correction.
 		lock steering to SHIP:PROGRADE + R(0,0,90).
 		set TVAL to 0.05.
 		if SHIP:APOAPSIS > targetApoapsis {
 			set runmode to runmode + 1.
 		}
 	}
-	
-	else if runmode = 10 {
+
+	else if runmode = 11 {
 		lock steering to heading(90,0) + R(0,0,90).
 		lock TVAL to 0.
 		SET WARP TO 4.
 
 		if ETA:APOAPSIS < 60 {
 			SET WARP TO 0.
-			set runmode to 11.
-			set apoapsisBeforeBurn to SHIP:APOAPSIS.
+			// calculate burn time required
+			set timeNeeded to circularizationTime().
+			set runmode to runmode + 1.
 		}
 	}
 
-	else if runmode = 11 {
-		if ETA:APOAPSIS < 8 or VERTICALSPEED < 0 {
+	else if runmode = 12 {
+		if ETA:APOAPSIS < timeNeeded/2 or VERTICALSPEED < 0 {
 			set TVAL to 1.
 		}
-		if (SHIP:PERIAPSIS > targetPeriapsis * 0.98) or (SHIP:APOAPSIS > (apoapsisBeforeBurn + 1000)){
+		if (SHIP:PERIAPSIS > targetPeriapsis * 0.995) or (SHIP:APOAPSIS > (currentApo + 1000)){
 			set TVAL to 0.
 			set runmode to 20.
 		}
@@ -205,8 +232,7 @@ until runmode = 0 {
 	print "Y0          " + Y0 + " " at (5,7).
 	print "twr         " + twr + " " at (5,9).
 	set timeseconds to time:seconds.
-	if MOD(FLOOR(timeseconds * 10),10) = 0 {
+	if MOD(FLOOR(timeseconds * 10),10) = 0 AND ADDONS:RT:HASKSCCONNECTION(SHIP) {
 	LOG time:seconds + " " + runmode + " " + SHIP:ALTITUDE + " " + SHIP:VELOCITY:ORBIT:MAG + " " + SHIP:APOAPSIS + " " + pitch + " " + SHIP:PERIAPSIS to "launchlog"+fileNameSuffix+".txt".
 	}
 }
-
