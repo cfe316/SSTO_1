@@ -1,6 +1,6 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
 switch to 0.
-set fileNameSuffix to "12".
+set fileNameSuffix to "13".
 // Start the script in a known configuration.
 SAS off.
 RCS off.
@@ -22,12 +22,18 @@ set targetApoCorrection to 3000.
 //set ascent parameters -------------
 set n to 1.0/3.
 set Y0 to 800. // height at which th0 is specified for the initial ascent curve
-set th0 to 10. // initial climb pitch angle
-set th1 to 22.
-set turn1R to 15000. // radius of circular turn up 
-set Y3 to 25000.
-set th2 to 25.
-set turn2R to 20000. // radius of 2nd circular turn up.
+set th0 to 10. // speedup pitch angle
+set th1 to 30. // climb pitch angle 
+set turn1R to 8000. // radius of circular turn up 
+set turn2R to 25000. // level off to powerclimb angle
+set Y2 to 10000. // powerclimb start height.
+set th2 to 22. // powerclimb pitch angle
+set Y3 to 22000.
+set th3 to 25. // thrust climb pitch
+set turn3R to 20000. // radius of turn to thrust climb
+set nukeStart to 20000.
+
+set turn2CY to Y2 - turn2R * COS(th2).
 
 // ts scales the ascent profile function
 set ts to Y0 * (TAN(th0) / n)^(n/(1-n)).
@@ -38,12 +44,23 @@ function initialAscentProfile {
 
 function turnUp { //a turn upward
 	parameter y.
-	if y < (turnCY - turnR) {
+	if y < (turnUCY - turnUR) {
 		RETURN 0.
-	} else if y > turnCY {
+	} else if y > turnUCY {
 		RETURN 90.
 	} else {
-		RETURN ARCTAN(SQRT(turnR^2 - (y - turnCY)^2)/(turnCY - y)).
+		RETURN ARCTAN(SQRT(turnUR^2 - (y - turnUCY)^2)/(turnUCY - y)).
+	}
+}.
+
+function turnDown { // a turn downward
+	parameter y.
+	if y < (turnDCY) {
+		RETURN 90.
+	} else if y > (turnDCY + turnDR) {
+		RETURN 0.
+	} else {
+		RETURN ARCTAN(SQRT(turnDR^2 - (y - turnDCY)^2)/(y- turnDCY)).
 	}
 }.
 
@@ -62,7 +79,7 @@ function circularizationTime {
 }.
 
 SET jetEngine to SHIP:PARTSNAMED("turboFanEngine")[0].
-WHEN ALTITUDE > 20000 THEN {
+WHEN ALTITUDE > nukeStart THEN {
 	stage. // fire the nuke.
 
 	WHEN jetEngine:GETMODULE("ModuleEnginesFX"):GETFIELD("status") = "Flame-out!" THEN {
@@ -127,40 +144,47 @@ until runmode = 0 {
 		if twr < 2 {
 		lock pitch to th0.
 		} else {
-			set turnCY to SHIP:ALTITUDE + turn1R * COS(th0).
-			set turnR to turn1R.
+			set turnUCY to SHIP:ALTITUDE + turn1R * COS(th0).
+			set turnUR to turn1R.
+			set turnDCY to turn2CY.
+			set turnDR to turn2R.
 			set runmode to runmode + 1.
 		}
 	}
 
 	else if runmode = 4 { // do the turn.
-		lock pitch to turnUp(SHIP:ALTITUDE).
-		if pitch > th1 {
+		lock pitch to MIN(MIN(turnUp(SHIP:ALTITUDE),th1), turnDown(SHIP:ALTITUDE)).
+		if SHIP:ALTITUDE > Y2 {
 			// Go to power climb
 			set runmode to runmode +1.
 		}
 	}
 
 	else if runmode = 5 { //power climb.
-		lock pitch to th1.
+		lock pitch to th2.
 		if SHIP:ALTITUDE > Y3 {
 			// Go to turn upwards 
-			set turnCY to SHIP:ALTITUDE + turn2R * COS(th1).
-			set turnR to turn2R.
+			set turnUCY to Y3 + turn3R * COS(th2).
+			set turnUR to turn3R.
 			set runmode to runmode +1.
 		}
 	}
 
 	else if runmode = 6 { // do the turn.
 		lock pitch to turnUP(SHIP:ALTITUDE).
-		if pitch > th2 {
+		if pitch > th3 {
 			// Go to thrust into orbit 
 			set runmode to runmode +1.
 		}
 	}
 
 	else if runmode = 7 { // thrust to orbit.
-		lock pitch to th2.
+		if ETA:APOAPSIS < 20 OR SHIP:APOAPSIS < 60000 {
+			lock pitch to th3.
+			lock steering to heading(90,pitch) + R(0,0,90).
+		} else {
+			lock steering to SHIP:PROGRADE + R(0,0,90).
+		}
 		if SHIP:APOAPSIS > targetApoapsis + targetApoCorrection  {
 			set thrustOffTime to TIME.
 			set runmode to runmode + 1.
