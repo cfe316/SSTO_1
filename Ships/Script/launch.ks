@@ -1,6 +1,6 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
 switch to 0.
-set fileNameSuffix to "13".
+set fileNameSuffix to "15".
 // Start the script in a known configuration.
 SAS off.
 RCS off.
@@ -17,19 +17,19 @@ clearscreen.
 set targetApoapsis to 100000.
 set targetPeriapsis to 100000.
 
-set targetApoCorrection to 3000.
+set targetApoCorrection to 8000.
 
 //set ascent parameters -------------
 set n to 1.0/3.
 set Y0 to 800. // height at which th0 is specified for the initial ascent curve
 set th0 to 10. // speedup pitch angle
-set th1 to 30. // climb pitch angle 
+set th1 to 26. // climb pitch angle 
 set turn1R to 8000. // radius of circular turn up 
 set turn2R to 25000. // level off to powerclimb angle
 set Y2 to 10000. // powerclimb start height.
-set th2 to 22. // powerclimb pitch angle
+set th2 to 26. // powerclimb pitch angle
 set Y3 to 22000.
-set th3 to 25. // thrust climb pitch
+set th3 to 24. // thrust climb pitch
 set turn3R to 20000. // radius of turn to thrust climb
 set nukeStart to 20000.
 
@@ -164,26 +164,26 @@ until runmode = 0 {
 		lock pitch to th2.
 		if SHIP:ALTITUDE > Y3 {
 			// Go to turn upwards 
-			set turnUCY to Y3 + turn3R * COS(th2).
-			set turnUR to turn3R.
+			set turnDCY to Y3 - turn3R * COS(th2).
+			set turnDR to turn3R.
 			set runmode to runmode +1.
 		}
 	}
 
 	else if runmode = 6 { // do the turn.
-		lock pitch to turnUP(SHIP:ALTITUDE).
-		if pitch > th3 {
+		lock pitch to turnDown(SHIP:ALTITUDE).
+		if pitch < th3 {
 			// Go to thrust into orbit 
 			set runmode to runmode +1.
 		}
 	}
 
 	else if runmode = 7 { // thrust to orbit.
-		if ETA:APOAPSIS < 20 OR SHIP:APOAPSIS < 60000 {
+		if ETA:APOAPSIS > 10 AND SHIP:PERIAPSIS > -20000 {
+			lock steering to SHIP:PROGRADE + R(0,0,90).
+		} else {
 			lock pitch to th3.
 			lock steering to heading(90,pitch) + R(0,0,90).
-		} else {
-			lock steering to SHIP:PROGRADE + R(0,0,90).
 		}
 		if SHIP:APOAPSIS > targetApoapsis + targetApoCorrection  {
 			set thrustOffTime to TIME.
@@ -223,7 +223,7 @@ until runmode = 0 {
 		lock TVAL to 0.
 		SET WARP TO 4.
 
-		if ETA:APOAPSIS < 60 {
+		if ETA:APOAPSIS < 120 {
 			SET WARP TO 0.
 			// calculate burn time required
 			set timeNeeded to circularizationTime().
