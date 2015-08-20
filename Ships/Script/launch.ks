@@ -104,13 +104,13 @@ lock throttle to 0. // Throttle goes from 0.0 to 1.0
 gear off.
 
 clearscreen.
-set runmode to 1.
+set mode to 1.
 set pitch to 90. // for printing reasons these need a default value.
 set twr to 1.
 // This the the main prorgram loop. It runs until the program ends.
-until runmode = 0 {
+until mode = 0 {
 	
-	if runmode = 1 { // Ship is on the launchpad
+	if mode = 1 { // Ship is on the launchpad
 		// we don't just set TVAL here because this block
 		// contains the countdown and launch. It only executes once.
 		lock throttle to 1. set TVAL to 1.
@@ -123,19 +123,19 @@ until runmode = 0 {
 		}
 		stage.
 		clearscreen.
-		set runmode to runmode + 1.
+		set mode to mode + 1.
 	}
 
-	else if runmode = 2 { // start initial ascent power-law profile.
+	else if mode = 2 { // start initial ascent power-law profile.
 		set TVAL to 1.
 		lock pitch to initialAscentProfile(SHIP:ALTITUDE).
 		lock steering to heading(90,pitch) + tr.
 		if SHIP:ALTITUDE > Y0 {
-			set runmode to runmode + 1.
+			set mode to mode + 1.
 		}
 	}
 
-	else if runmode = 3 { // go in a straight line until the turn starts.
+	else if mode = 3 { // go in a straight line until the turn starts.
 		set shipmass to SHIP:MASS.
 		set thrust to 2 * jetEngine:THRUST.
 		set twr to thrust / (shipmass * g).
@@ -147,37 +147,37 @@ until runmode = 0 {
 			set turnUR to turn1R.
 			set turnDCY to turn2CY.
 			set turnDR to turn2R.
-			set runmode to runmode + 1.
+			set mode to mode + 1.
 		}
 	}
 
-	else if runmode = 4 { // do the turn.
+	else if mode = 4 { // do the turn.
 		lock pitch to MIN(MIN(turnUp(SHIP:ALTITUDE),th1), turnDown(SHIP:ALTITUDE)).
 		if SHIP:ALTITUDE > Y2 {
 			// Go to power climb
-			set runmode to runmode +1.
+			set mode to mode +1.
 		}
 	}
 
-	else if runmode = 5 { //power climb.
+	else if mode = 5 { //power climb.
 		lock pitch to th2.
 		if SHIP:ALTITUDE > Y3 {
 			// Go to turn upwards 
 			set turnDCY to Y3 - turn3R * COS(th2).
 			set turnDR to turn3R.
-			set runmode to runmode +1.
+			set mode to mode +1.
 		}
 	}
 
-	else if runmode = 6 { // do the turn.
+	else if mode = 6 { // do the turn.
 		lock pitch to turnDown(SHIP:ALTITUDE).
 		if pitch < th3 {
 			// Go to thrust into orbit 
-			set runmode to runmode +1.
+			set mode to mode +1.
 		}
 	}
 
-	else if runmode = 7 { // thrust to orbit.
+	else if mode = 7 { // thrust to orbit.
 		if ETA:APOAPSIS > 10 AND SHIP:PERIAPSIS > -20000 {
 			lock steering to SHIP:PROGRADE + tr.
 		} else {
@@ -186,38 +186,38 @@ until runmode = 0 {
 		}
 		if SHIP:APOAPSIS > targetApoapsis {
 			set thrustOffTime to TIME.
-			set runmode to runmode + 1.
+			set mode to mode + 1.
 		}
 	}
-	else if runmode = 8 { // coast to space.
+	else if mode = 8 { // coast to space.
 		lock steering to SHIP:PROGRADE + tr.
 		set TVAL to 0.
 		if (TIME - thrustOffTime) > 10 {
 			set WARPMODE TO "PHYSICS".
 			set WARP TO 3.
-			set runmode to runmode + 1.
+			set mode to mode + 1.
 		}
 	}
 
-	else if runmode = 9 { //warp to edge of atmo.
+	else if mode = 9 { //warp to edge of atmo.
 		if SHIP:ALTITUDE > 69500 {
 			set WARP to 0.
 			set WARPMODE to "RAILS".
 		}
 		if SHIP:ALTITUDE > 70000 {
-			set runmode to runmode + 1.
+			set mode to mode + 1.
 		}
 	}
 	
-	else if runmode = 10 { //apoapsis correction.
+	else if mode = 10 { //apoapsis correction.
 		lock steering to SHIP:PROGRADE + tr.
 		set TVAL to 0.05.
 		if SHIP:APOAPSIS > targetApoapsis {
-			set runmode to runmode + 1.
+			set mode to mode + 1.
 		}
 	}
 
-	else if runmode = 11 {
+	else if mode = 11 {
 		lock steering to heading(90,0) + tr.
 		lock TVAL to 0.
 		SET WARP TO 4.
@@ -226,25 +226,25 @@ until runmode = 0 {
 			SET WARP TO 0.
 			// calculate burn time required
 			set timeNeeded to circularizationTime().
-			set runmode to runmode + 1.
+			set mode to mode + 1.
 		}
 	}
 
-	else if runmode = 12 {
+	else if mode = 12 {
 		if ETA:APOAPSIS < timeNeeded/2 or VERTICALSPEED < 0 {
 			set TVAL to 1.
 		}
 		if (SHIP:PERIAPSIS > targetPeriapsis * 0.995) or (SHIP:APOAPSIS > (currentApo + 1000)){
 			set TVAL to 0.
-			set runmode to 20.
+			set mode to 20.
 		}
 	}
 
 	//end program
-	else if runmode = 20 {
+	else if mode = 20 {
 		set TVAL to 0.
 		unlock steering.
-		set runmode to 0.
+		set mode to 0.
 	}
 
 	if SHIP:ALTITUDE < 15000 {
@@ -253,7 +253,7 @@ until runmode = 0 {
 		lock throttle to TVAL.
 	}
 
-	print "RUNMODE:    " + runmode + "      " at (5,4).
+	print "MODE:    " + mode + "      " at (5,4).
 	print "pitch:      " + round(pitch*100)/100 + "       "  at (5,5).
 	print "twr         " + round(twr*100)/100 + "       " at (5,6).
 }
