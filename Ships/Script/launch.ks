@@ -1,28 +1,21 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
-switch to 0.
-set fileNameSuffix to "15".
-// Start the script in a known configuration.
-SAS off.
-RCS off.
-lights off.
-lock throttle to 0. // Throttle goes from 0.0 to 1.0
-gear off.
 
-set littleg to KERBIN:MU / KERBIN:RADIUS^2.
+set tr to R(0,0,-90). //Make craft fly upright. Perhaps set to R(0,0,0) if you're Eugene.
+
+set g to KERBIN:MU / KERBIN:RADIUS^2.
 set mu to KERBIN:MU.
-
-clearscreen.
 
 //Set desired orbit parameters.
 set targetApoapsis to 100000.
 set targetPeriapsis to 100000.
 
-set targetApoCorrection to 8000.
+set sm to SHIP:MASS.
+set thrCorrFac to MIN(1,(sm/17.565)). //design weight of ship in tons.
 
 //set ascent parameters -------------
 set n to 1.0/3.
 set Y0 to 800. // height at which th0 is specified for the initial ascent curve
-set th0 to 10. // speedup pitch angle
+set th0 to 12. // speedup pitch angle
 set th1 to 26. // climb pitch angle 
 set turn1R to 8000. // radius of circular turn up 
 set turn2R to 25000. // level off to powerclimb angle
@@ -93,9 +86,6 @@ WHEN ALTITUDE > nukeStart THEN {
 		// this nested WHEN will start checking after the first one happens.
 		// That way the CPU only has to check for one WHEN event at a time.
 		WHEN SHIP:ALTITUDE > 70010 THEN {
-			// perhaps we could leave the fairing behind earlier, 
-			// but it's pretty lightweight... I don't even see a change in 
-			//deltaV in KER when it fires..
 			SET fairingpart to SHIP:PARTSTAGGED("airstream")[0].
 			fairingpart:GETMODULE("ModuleProceduralFairing"):DOEVENT("DEPLOY").
 
@@ -105,8 +95,17 @@ WHEN ALTITUDE > nukeStart THEN {
 	}
 }
 
+// main script begin.
+// Start the script in a known configuration.
+SAS off.
+RCS off.
+lights off.
+lock throttle to 0. // Throttle goes from 0.0 to 1.0
+gear off.
+
+clearscreen.
 set runmode to 1.
-set pitch to 90.
+set pitch to 90. // for printing reasons these need a default value.
 set twr to 1.
 // This the the main prorgram loop. It runs until the program ends.
 until runmode = 0 {
@@ -130,16 +129,16 @@ until runmode = 0 {
 	else if runmode = 2 { // start initial ascent power-law profile.
 		set TVAL to 1.
 		lock pitch to initialAscentProfile(SHIP:ALTITUDE).
-		lock steering to heading(90,pitch) + R(0,0,90).
+		lock steering to heading(90,pitch) + tr.
 		if SHIP:ALTITUDE > Y0 {
 			set runmode to runmode + 1.
 		}
 	}
 
 	else if runmode = 3 { // go in a straight line until the turn starts.
-		set shipmass to SHIP:MASS * 1000.
-		set thrust to 2 * jetEngine:THRUST * 1000.
-		set twr to thrust / (shipmass * littleg).
+		set shipmass to SHIP:MASS.
+		set thrust to 2 * jetEngine:THRUST.
+		set twr to thrust / (shipmass * g).
 
 		if twr < 2 {
 		lock pitch to th0.
@@ -180,18 +179,18 @@ until runmode = 0 {
 
 	else if runmode = 7 { // thrust to orbit.
 		if ETA:APOAPSIS > 10 AND SHIP:PERIAPSIS > -20000 {
-			lock steering to SHIP:PROGRADE + R(0,0,90).
+			lock steering to SHIP:PROGRADE + tr.
 		} else {
 			lock pitch to th3.
-			lock steering to heading(90,pitch) + R(0,0,90).
+			lock steering to heading(90,pitch) + tr.
 		}
-		if SHIP:APOAPSIS > targetApoapsis + targetApoCorrection  {
+		if SHIP:APOAPSIS > targetApoapsis {
 			set thrustOffTime to TIME.
 			set runmode to runmode + 1.
 		}
 	}
 	else if runmode = 8 { // coast to space.
-		lock steering to SHIP:PROGRADE + R(0,0,90).
+		lock steering to SHIP:PROGRADE + tr.
 		set TVAL to 0.
 		if (TIME - thrustOffTime) > 10 {
 			set WARPMODE TO "PHYSICS".
@@ -211,7 +210,7 @@ until runmode = 0 {
 	}
 	
 	else if runmode = 10 { //apoapsis correction.
-		lock steering to SHIP:PROGRADE + R(0,0,90).
+		lock steering to SHIP:PROGRADE + tr.
 		set TVAL to 0.05.
 		if SHIP:APOAPSIS > targetApoapsis {
 			set runmode to runmode + 1.
@@ -219,7 +218,7 @@ until runmode = 0 {
 	}
 
 	else if runmode = 11 {
-		lock steering to heading(90,0) + R(0,0,90).
+		lock steering to heading(90,0) + tr.
 		lock TVAL to 0.
 		SET WARP TO 4.
 
@@ -248,15 +247,13 @@ until runmode = 0 {
 		set runmode to 0.
 	}
 
-	lock throttle to TVAL.
+	if SHIP:ALTITUDE < 15000 {
+		lock throttle to TVAL * thrCorrFac.
+	} else {
+		lock throttle to TVAL.
+	}
 
 	print "RUNMODE:    " + runmode + "      " at (5,4).
-	print "pitch:      " + pitch + "       "  at (5,5).
-	print "ts:         " + ts + " " at (5,6).
-	print "Y0          " + Y0 + " " at (5,7).
-	print "twr         " + twr + " " at (5,9).
-	set timeseconds to time:seconds.
-	if MOD(FLOOR(timeseconds * 10),10) = 0 AND ADDONS:RT:HASKSCCONNECTION(SHIP) {
-	LOG time:seconds + " " + runmode + " " + SHIP:ALTITUDE + " " + SHIP:VELOCITY:ORBIT:MAG + " " + SHIP:APOAPSIS + " " + pitch + " " + SHIP:PERIAPSIS to "launchlog"+fileNameSuffix+".txt".
-	}
+	print "pitch:      " + round(pitch*100)/100 + "       "  at (5,5).
+	print "twr         " + round(twr*100)/100 + "       " at (5,6).
 }
