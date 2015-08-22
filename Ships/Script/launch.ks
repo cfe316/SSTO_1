@@ -204,7 +204,7 @@ until mode = 0 {
 			set WARP to 0.
 			set WARPMODE to "RAILS".
 		}
-		if SHIP:ALTITUDE > 70000 {
+		if SHIP:ALTITUDE > 70500 {
 			set mode to mode + 1.
 		}
 	}
