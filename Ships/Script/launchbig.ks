@@ -16,15 +16,15 @@ set thrCorrFac to MIN(1,(sm/35)). //design weight of ship in tons.
 set n to 1.0/3.
 set Y0 to 800. // height at which th0 is specified for the initial ascent curve
 set th0 to 12. // speedup pitch angle
-set th1 to 24. // climb pitch angle 
+set th1 to 27. // climb pitch angle 
 set turn1R to 8000. // radius of circular turn up 
 set turn2R to 25000. // level off to powerclimb angle
 set Y2 to 10000. // powerclimb start height.
-set th2 to 24. // powerclimb pitch angle
+set th2 to 27. // powerclimb pitch angle
 set Y3 to 22000.
-set th3 to 24. // thrust climb pitch
+set th3 to 25. // thrust climb pitch
 set turn3R to 20000. // radius of turn to thrust climb
-set nukeStart to 20000.
+set nukeStart to 22000.
 
 set turn2CY to Y2 - turn2R * COS(th2).
 
@@ -178,13 +178,13 @@ until mode = 0 {
 	}
 
 	else if mode = 7 { // thrust to orbit.
-		if ETA:APOAPSIS > 10 AND SHIP:PERIAPSIS > 20000 {
+		if True {
 			lock steering to SHIP:PROGRADE + tr.
 		} else {
 			lock pitch to th3.
 			lock steering to heading(90,pitch) + tr.
 		}
-		if SHIP:APOAPSIS > targetApoapsis + 5000 {
+		if SHIP:APOAPSIS > targetApoapsis + 1000 {
 			set thrustOffTime to TIME.
 			set mode to mode + 1.
 		}
