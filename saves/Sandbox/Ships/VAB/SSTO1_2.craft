@@ -2339,7 +2339,7 @@ PART
 	{
 		name = KOSNameTag
 		isEnabled = True
-		nameTag = 
+		nameTag = rok
 		EVENTS
 		{
 			PopupNameTagChanger

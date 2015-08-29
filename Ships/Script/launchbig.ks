@@ -1,30 +1,32 @@
 // This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
+copy lib from archive.
+run lib.
 
+lock SM to S:MASS.
+lock ALTI to S:ALTITUDE.
+lock APO to S:APOAPSIS.
+lock PER to S:PERIAPSIS.
 set tr to R(0,0,-90). //Make craft fly upright. Perhaps set to R(0,0,0) if you're Eugene.
 
-set g to KERBIN:MU / KERBIN:RADIUS^2.
-set mu to KERBIN:MU.
-
 //Set desired orbit parameters.
-set targetApoapsis to 100000.
-set targetPeriapsis to 100000.
+set targetApoapsis to 100*k.
+set targetPeriapsis to 100*k.
 
-set sm to SHIP:MASS.
-set thrCorrFac to MIN(1,(sm/35)). //design weight of ship in tons.
+set thrCorrFac to MIN(1,(SM/35)). //design weight of ship in tons.
 
 //set ascent parameters -------------
 set n to 1.0/3.
 set Y0 to 800. // height at which th0 is specified for the initial ascent curve
 set th0 to 12. // speedup pitch angle
 set th1 to 27. // climb pitch angle 
-set turn1R to 8000. // radius of circular turn up 
-set turn2R to 25000. // level off to powerclimb angle
-set Y2 to 10000. // powerclimb start height.
+set turn1R to 8*k. // radius of circular turn up 
+set turn2R to 25*K. // level off to powerclimb angle
+set Y2 to 10*k. // powerclimb start height.
 set th2 to 27. // powerclimb pitch angle
-set Y3 to 22000.
+set Y3 to 22*k.
 set th3 to 25. // thrust climb pitch
-set turn3R to 20000. // radius of turn to thrust climb
-set nukeStart to 22000.
+set turn3R to 20*k. // radius of turn to thrust climb
+set rocketStart to 22*k.
 
 set turn2CY to Y2 - turn2R * COS(th2).
 
@@ -35,62 +37,25 @@ function initialAscentProfile {
 	RETURN ARCTAN(n * (y / ts)^(1 - 1/n)).
 }.
 
-function turnUp { //a turn upward
-	parameter y.
-	if y < (turnUCY - turnUR) {
-		RETURN 0.
-	} else if y > turnUCY {
-		RETURN 90.
-	} else {
-		RETURN ARCTAN(SQRT(turnUR^2 - (y - turnUCY)^2)/(turnUCY - y)).
-	}
-}.
-
-function turnDown { // a turn downward
-	parameter y.
-	if y < (turnDCY) {
-		RETURN 90.
-	} else if y > (turnDCY + turnDR) {
-		RETURN 0.
-	} else {
-		RETURN ARCTAN(SQRT(turnDR^2 - (y - turnDCY)^2)/(y- turnDCY)).
-	}
-}.
-
-function circularizationTime {
-	set currentApo to SHIP:APOAPSIS + KERBIN:RADIUS.
-	set semimaj to (currentApo + SHIP:PERIAPSIS + KERBIN:RADIUS)/2. 
-	set vDesired to SQRT(mu / currentApo).
-	set orbEn to -mu/(2 * semimaj).
-	set vApoCurrent to SQRT(2*(orbEn + mu/currentApo)).
-	set deltaVNeeded to vDesired - vApoCurrent.
-	set nukeThrust to 120.
-	set shipmass to SHIP:MASS.
-	set accPoss to nukeThrust / shipmass.
-	set timeNeeded to deltaVNeeded/accPoss.
-	RETURN timeNeeded.
-}.
 
 SET jetEngine to SHIP:PARTSNAMED("turboFanEngine")[0].
-WHEN ALTITUDE > nukeStart THEN {
-	stage. // fire the nuke.
+WHEN ALTI > rocketStart THEN {
+	stage. // fire the rocket.
 
 	WHEN jetEngine:GETMODULE("ModuleEnginesFX"):GETFIELD("status") = "Flame-out!" THEN {
 		SET partsList to SHIP:PARTSTITLED("Ram Air Intake").
 		for part in partsList {
 			SET mod to part:GETMODULE("ModuleResourceIntake").
 			mod:DOEVENT("close intake").
-			// perhaps also switch off engines here.
-			// or make it go into a runmode where we decrease throttle, just avoiding flameout.
 		}
 		// this nested WHEN will start checking after the first one happens.
 		// That way the CPU only has to check for one WHEN event at a time.
-		WHEN SHIP:ALTITUDE > 70010 THEN {
-			SET fairingpart to SHIP:PARTSTAGGED("airstream")[0].
-			fairingpart:GETMODULE("ModuleProceduralFairing"):DOEVENT("DEPLOY").
+		WHEN ALTI > 70010 THEN {
+			SET pt to SHIP:PARTSTAGGED("airstream")[0].
+			pt:GETMODULE("ModuleProceduralFairing"):DOEVENT("DEPLOY").
 
-			SET topAntenna to SHIP:PARTSTAGGED("topAntenna")[0].
-			topAntenna:GETMODULE("ModuleRTAntenna"):DOEVENT("ACTIVATE").
+			SET pt to SHIP:PARTSTAGGED("topAntenna")[0].
+			pt:GETMODULE("ModuleRTAntenna"):DOEVENT("ACTIVATE").
 		}
 	}
 }
@@ -117,7 +82,7 @@ until mode = 0 {
 		wait 0.1.
 		stage.
 		PRINT "Counting down:".
-		FROM {local countdown is 12.} until countdown = 0 STEP {SET countdown to countdown -1.} DO {
+		FROM {local countdown is 15.} until countdown = 0 STEP {SET countdown to countdown -1.} DO {
 			PRINT "..." + countdown.
 			WAIT 1.
 		}
@@ -128,22 +93,18 @@ until mode = 0 {
 
 	else if mode = 2 { // start initial ascent power-law profile.
 		set TVAL to 1.
-		lock pitch to initialAscentProfile(SHIP:ALTITUDE).
+		lock pitch to initialAscentProfile(ALTI).
 		lock steering to heading(90,pitch) + tr.
-		if SHIP:ALTITUDE > Y0 {
+		if ALTI > Y0 {
 			set mode to mode + 1.
 		}
 	}
 
 	else if mode = 3 { // go in a straight line until the turn starts.
-		set shipmass to SHIP:MASS.
-		set thrust to 4 * jetEngine:THRUST.
-		set twr to thrust / (shipmass * g).
-
-		if twr < 2 {
+		if MAXTHRUST / (SM * g) < 2 {
 		lock pitch to th0.
 		} else {
-			set turnUCY to SHIP:ALTITUDE + turn1R * COS(th0).
+			set turnUCY to ALTI + turn1R * COS(th0).
 			set turnUR to turn1R.
 			set turnDCY to turn2CY.
 			set turnDR to turn2R.
@@ -152,8 +113,8 @@ until mode = 0 {
 	}
 
 	else if mode = 4 { // do the turn.
-		lock pitch to MIN(MIN(turnUp(SHIP:ALTITUDE),th1), turnDown(SHIP:ALTITUDE)).
-		if SHIP:ALTITUDE > Y2 {
+		lock pitch to MIN(MIN(turnUp(ALTI),th1), turnDown(ALTI)).
+		if ALTI > Y2 {
 			// Go to power climb
 			set mode to mode +1.
 		}
@@ -161,7 +122,7 @@ until mode = 0 {
 
 	else if mode = 5 { //power climb.
 		lock pitch to th2.
-		if SHIP:ALTITUDE > Y3 {
+		if ALTI > Y3 {
 			// Go to turn upwards 
 			set turnDCY to Y3 - turn3R * COS(th2).
 			set turnDR to turn3R.
@@ -170,7 +131,7 @@ until mode = 0 {
 	}
 
 	else if mode = 6 { // do the turn.
-		lock pitch to turnDown(SHIP:ALTITUDE).
+		lock pitch to turnDown(ALTI).
 		if pitch < th3 {
 			// Go to thrust into orbit 
 			set mode to mode +1.
@@ -178,19 +139,19 @@ until mode = 0 {
 	}
 
 	else if mode = 7 { // thrust to orbit.
-		if True {
-			lock steering to SHIP:PROGRADE + tr.
+		if ALTI > 50*k {
+			lock steering to PROGRADE + tr.
 		} else {
 			lock pitch to th3.
 			lock steering to heading(90,pitch) + tr.
 		}
-		if SHIP:APOAPSIS > targetApoapsis + 1000 {
+		if APO > targetApoapsis {
 			set thrustOffTime to TIME.
 			set mode to mode + 1.
 		}
 	}
 	else if mode = 8 { // coast to space.
-		lock steering to SHIP:PROGRADE + tr.
+		lock steering to PROGRADE + tr.
 		set TVAL to 0.
 		if (TIME - thrustOffTime) > 10 {
 			set WARPMODE TO "PHYSICS".
@@ -200,19 +161,20 @@ until mode = 0 {
 	}
 
 	else if mode = 9 { //warp to edge of atmo.
-		if SHIP:ALTITUDE > 69500 {
+		if ALTI > 69500 {
 			set WARP to 0.
 			set WARPMODE to "RAILS".
 		}
-		if SHIP:ALTITUDE > 70500 {
+		if ALTI > 70500 {
+			airControlsOff().
 			set mode to mode + 1.
 		}
 	}
 	
 	else if mode = 10 { //apoapsis correction.
-		lock steering to SHIP:PROGRADE + tr.
+		lock steering to PROGRADE + tr.
 		set TVAL to 0.05.
-		if SHIP:APOAPSIS > targetApoapsis {
+		if APO > targetApoapsis {
 			set mode to mode + 1.
 		}
 	}
@@ -226,6 +188,7 @@ until mode = 0 {
 			SET WARP TO 0.
 			// calculate burn time required
 			set timeNeeded to circularizationTime().
+			set currAp to APO.
 			set mode to mode + 1.
 		}
 	}
@@ -234,7 +197,7 @@ until mode = 0 {
 		if ETA:APOAPSIS < timeNeeded/2 or VERTICALSPEED < 0 {
 			set TVAL to 1.
 		}
-		if (SHIP:PERIAPSIS > targetPeriapsis * 0.995) or (SHIP:APOAPSIS > (currentApo + 1000)){
+		if (PER > targetPeriapsis * 0.995) or (APO > (currAp + 1*k)){
 			set TVAL to 0.
 			set mode to 20.
 		}
@@ -247,13 +210,11 @@ until mode = 0 {
 		set mode to 0.
 	}
 
-	if SHIP:ALTITUDE < 15000 {
+	if ALTI < 15*k {
 		lock throttle to TVAL * thrCorrFac.
 	} else {
 		lock throttle to TVAL.
 	}
 
 	print "MODE:    " + mode + "      " at (5,4).
-	print "pitch:      " + round(pitch*100)/100 + "       "  at (5,5).
-	print "twr         " + round(twr*100)/100 + "       " at (5,6).
 }
