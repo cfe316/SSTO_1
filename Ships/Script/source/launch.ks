@@ -21,9 +21,9 @@ set Y0 to 800. // height at which th0 is specified for the initial ascent curve
 set th0 to 12. // speedup pitch angle
 set th1 to 26. // climb pitch angle 
 set turn1R to 8*k. // radius of circular turn up 
-set Y3 to 22*k.
-set th3 to 24. // thrust climb pitch
-set turn3R to 20*k. // radius of turn to thrust climb
+set Y2 to 22*k.
+set th2 to 24. // thrust climb pitch
+set turn2R to 20*k. // radius of turn to thrust climb
 set rocketStart to 20*k.
 
 // ts scales the ascent profile function
@@ -40,8 +40,7 @@ WHEN ALTI > rocketStart THEN {
 	WHEN jet:FLAMEOUT THEN {
 		SET ptL to S:PARTSTITLED("Ram Air Intake").
 		for pt in ptL {
-			SET md to pt:GETMODULE("ModuleResourceIntake").
-			md:DOEVENT("close intake").
+			pt:GETMODULE("ModuleResourceIntake"):DOEVENT("close intake").
 		}
 		// this nested WHEN will start checking after the first one happens.
 		// That way the CPU only has to check for one WHEN event at a time.
@@ -104,18 +103,17 @@ until mode = 0 {
 
 	else if mode = 4 { // do the turn.
 		lock pitch to MIN(turnUp(ALTI),th1).
-		if ALTI > Y3 {
+		if ALTI > Y2 {
 			// Go to power climb
-			set turnDCY to Y3 - turn3R * COS(th1).
-			set turnDR to turn3R.
-			set mode to mode +1.
-			set mode to mode +1.
+			set turnDCY to Y2 - turn2R * COS(th1).
+			set turnDR to turn2R.
+			set mode to mode +2.
 		}
 	}
 	
 	else if mode = 6 { // do the turn.
 		lock pitch to turnDown(ALTI).
-		if pitch < th3 {
+		if pitch < th2 {
 			// Go to thrust into orbit 
 			set mode to mode +1.
 		}
@@ -125,7 +123,7 @@ until mode = 0 {
 		if ETA:APOAPSIS > 10 AND PER > -20*k {
 			lock steering to PROGRADE + tr.
 		} else {
-			lock pitch to th3.
+			lock pitch to th2.
 			lock steering to heading(90,pitch) + tr.
 		}
 		if APO > targetApoapsis {

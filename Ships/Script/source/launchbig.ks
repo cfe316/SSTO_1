@@ -15,20 +15,15 @@ set targetPeriapsis to 100*k.
 set thrCorrFac to MIN(1,(SM/35)). //design weight of ship in tons.
 
 //set ascent parameters -------------
-set n to 1.0/3.
+set n to 1/3.
 set Y0 to 800. // height at which th0 is specified for the initial ascent curve
 set th0 to 12. // speedup pitch angle
 set th1 to 27. // climb pitch angle 
 set turn1R to 8*k. // radius of circular turn up 
-set turn2R to 25*K. // level off to powerclimb angle
-set Y2 to 10*k. // powerclimb start height.
-set th2 to 27. // powerclimb pitch angle
-set Y3 to 22*k.
-set th3 to 25. // thrust climb pitch
-set turn3R to 20*k. // radius of turn to thrust climb
+set Y2 to 22*k.
+set th2 to 25. // thrust climb pitch
+set turn2R to 20*k. // radius of turn to thrust climb
 set rocketStart to 22*k.
-
-set turn2CY to Y2 - turn2R * COS(th2).
 
 // ts scales the ascent profile function
 set ts to Y0 * (TAN(th0) / n)^(n/(1-n)).
@@ -37,24 +32,22 @@ function initialAscentProfile {
 	RETURN ARCTAN(n * (y / ts)^(1 - 1/n)).
 }.
 
-
-SET jetEngine to SHIP:PARTSNAMED("turboFanEngine")[0].
+SET jet to S:PARTSNAMED("turboFanEngine")[0].
 WHEN ALTI > rocketStart THEN {
 	stage. // fire the rocket.
 
-	WHEN jetEngine:GETMODULE("ModuleEnginesFX"):GETFIELD("status") = "Flame-out!" THEN {
-		SET partsList to SHIP:PARTSTITLED("Ram Air Intake").
-		for part in partsList {
-			SET mod to part:GETMODULE("ModuleResourceIntake").
-			mod:DOEVENT("close intake").
+	WHEN jet:FLAMEOUT THEN {
+		SET ptL to S:PARTSTITLED("Ram Air Intake").
+		for pt in ptL {
+			pt:GETMODULE("ModuleResourceIntake"):DOEVENT("close intake").
 		}
 		// this nested WHEN will start checking after the first one happens.
 		// That way the CPU only has to check for one WHEN event at a time.
 		WHEN ALTI > 70010 THEN {
-			SET pt to SHIP:PARTSTAGGED("airstream")[0].
+			SET pt to S:PARTSTAGGED("airstream")[0].
 			pt:GETMODULE("ModuleProceduralFairing"):DOEVENT("DEPLOY").
 
-			SET pt to SHIP:PARTSTAGGED("topAntenna")[0].
+			SET pt to S:PARTSTAGGED("topAntenna")[0].
 			pt:GETMODULE("ModuleRTAntenna"):DOEVENT("ACTIVATE").
 		}
 	}
@@ -106,33 +99,23 @@ until mode = 0 {
 		} else {
 			set turnUCY to ALTI + turn1R * COS(th0).
 			set turnUR to turn1R.
-			set turnDCY to turn2CY.
-			set turnDR to turn2R.
 			set mode to mode + 1.
 		}
 	}
 
 	else if mode = 4 { // do the turn.
-		lock pitch to MIN(MIN(turnUp(ALTI),th1), turnDown(ALTI)).
+		lock pitch to MIN(turnUp(ALTI),th1).
 		if ALTI > Y2 {
 			// Go to power climb
-			set mode to mode +1.
-		}
-	}
-
-	else if mode = 5 { //power climb.
-		lock pitch to th2.
-		if ALTI > Y3 {
-			// Go to turn upwards 
-			set turnDCY to Y3 - turn3R * COS(th2).
-			set turnDR to turn3R.
-			set mode to mode +1.
+			set turnDCY to Y2 - turn2R * COS(th1).
+			set turnDR to turn2R.
+			set mode to mode +2.
 		}
 	}
 
 	else if mode = 6 { // do the turn.
 		lock pitch to turnDown(ALTI).
-		if pitch < th3 {
+		if pitch < th2 {
 			// Go to thrust into orbit 
 			set mode to mode +1.
 		}
@@ -142,7 +125,7 @@ until mode = 0 {
 		if ALTI > 50*k {
 			lock steering to PROGRADE + tr.
 		} else {
-			lock pitch to th3.
+			lock pitch to th2.
 			lock steering to heading(90,pitch) + tr.
 		}
 		if APO > targetApoapsis {
