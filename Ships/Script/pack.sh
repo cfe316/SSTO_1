@@ -15,6 +15,7 @@ for f in $FILES; do
 	-e 's/^\(\([^"]*\)\("[^"]*"[^"]*\)*\)\/\/.*/\1/g' \
 	-e 's/^\( \|\t\)*//g' \
 	-e 's/\( \|\t\)*$//g' \
+	-e '/^\s*$/d' \
 	$f > $(basename $f);
 	# the first line strips comments
 	# the second line strips leading whitespace
