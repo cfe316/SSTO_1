@@ -1,36 +1,20 @@
-// This script is to launch the SSTO1-1, an 18-ton, 4-ton-payload SSTO craft.
-copy lib from archive.
-run lib.
-
-lock SM to S:MASS.
-lock ALTI to S:ALTITUDE.
-lock APO to S:APOAPSIS.
-lock PER to S:PERIAPSIS.
-set tr to R(0,0,-90). //Make craft fly upright. Perhaps set to R(0,0,0) if you're Eugene.
-
-//Set desired orbit parameters.
-set targetApoapsis to 100*k.
-set targetPeriapsis to 100*k.
-
-set thrCorrFac to MIN(1,(SM/35)). //design weight of ship in tons.
-
-//set ascent parameters -------------
-set n to 1/3.
-set Y0 to 800. // height at which th0 is specified for the initial ascent curve
-set th0 to 12. // speedup pitch angle
-set th1 to 27. // climb pitch angle 
-set turn1R to 8*k. // radius of circular turn up 
-set Y2 to 22*k.
-set th2 to 25. // thrust climb pitch
-set turn2R to 20*k. // radius of turn to thrust climb
-set rocketStart to 22*k.
-
-// ts scales the ascent profile function
-set ts to Y0 * (TAN(th0) / n)^(n/(1-n)).
-function initialAscentProfile {
-	parameter y.
-	RETURN ARCTAN(n * (y / ts)^(1 - 1/n)).
-}.
+// skeleton launch script.
+// Assumes the first three stages like
+// 1) Jets
+// 2) Release launch clamps
+// 3) Rocket engine
+// needs predefined:
+// n, th0, th1, th2 
+// Y0, Y2
+// turn1R, turn2R
+// rocketStart
+// thrCorrFac
+// targetApoapsis, targetPeriapsis
+// tr (rotation to make the craft fly upright)
+// SM (SHIP:MASS)
+// ALTI (ALTITUDE)
+// APO (APOAPSIS)
+// PER (PERIAPSIS)
 
 SET jet to S:PARTSNAMED("turboFanEngine")[0].
 WHEN ALTI > rocketStart THEN {
@@ -56,9 +40,6 @@ WHEN ALTI > rocketStart THEN {
 // main script begin.
 // Start the script in a known configuration.
 SAS off.
-RCS off.
-lights off.
-lock throttle to 0. // Throttle goes from 0.0 to 1.0
 gear off.
 
 clearscreen.
@@ -71,11 +52,10 @@ until mode = 0 {
 	if mode = 1 { // Ship is on the launchpad
 		// we don't just set TVAL here because this block
 		// contains the countdown and launch. It only executes once.
-		lock throttle to 1. set TVAL to 1.
-		wait 0.1.
+		lock throttle to 1. set TVAL to 1. wait 0.1.
 		stage.
 		PRINT "Counting down:".
-		FROM {local countdown is 15.} until countdown = 0 STEP {SET countdown to countdown -1.} DO {
+		FROM {local countdown is 12.} until countdown = 0 STEP {SET countdown to countdown -1.} DO {
 			PRINT "..." + countdown.
 			WAIT 1.
 		}
@@ -86,7 +66,7 @@ until mode = 0 {
 
 	else if mode = 2 { // start initial ascent power-law profile.
 		set TVAL to 1.
-		lock pitch to initialAscentProfile(ALTI).
+		lock pitch to initialturn(ALTI, Y0, th0, n).
 		lock steering to heading(90,pitch) + tr.
 		if ALTI > Y0 {
 			set mode to mode + 1.
@@ -112,7 +92,7 @@ until mode = 0 {
 			set mode to mode +2.
 		}
 	}
-
+	
 	else if mode = 6 { // do the turn.
 		lock pitch to turnDown(ALTI).
 		if pitch < th2 {
@@ -122,17 +102,9 @@ until mode = 0 {
 	}
 
 	else if mode = 7 { // thrust to orbit.
-		if ALTI > 50*k {
-			lock steering to PROGRADE + tr.
-		} else {
-			lock pitch to th2.
-			lock steering to heading(90,pitch) + tr.
-		}
-		if APO > targetApoapsis {
-			set thrustOffTime to TIME.
-			set mode to mode + 1.
-		}
+		thrustToOrbit().
 	}
+
 	else if mode = 8 { // coast to space.
 		lock steering to PROGRADE + tr.
 		set TVAL to 0.
@@ -153,7 +125,7 @@ until mode = 0 {
 			set mode to mode + 1.
 		}
 	}
-	
+
 	else if mode = 10 { //apoapsis correction.
 		lock steering to PROGRADE + tr.
 		set TVAL to 0.05.
@@ -166,7 +138,6 @@ until mode = 0 {
 		lock steering to heading(90,0) + tr.
 		lock TVAL to 0.
 		SET WARP TO 4.
-
 		if ETA:APOAPSIS < 120 {
 			SET WARP TO 0.
 			// calculate burn time required

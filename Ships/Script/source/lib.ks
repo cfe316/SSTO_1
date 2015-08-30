@@ -3,6 +3,14 @@ set KR to KERBIN:RADIUS.
 set g to MU/KR^2.
 set k to 1000.
 set S to SHIP.
+function initialTurn {
+	parameter y.
+	parameter Y0.
+	parameter th0.
+	parameter n.
+	set ts to Y0 * (TAN(th0) / n)^(n/(1-n)).
+	RETURN ARCTAN(n * (y / ts)^(1 - 1/n)).
+}.
 function turnUp { //a turn upward
 	parameter y.
 	if y < (turnUCY - turnUR) {
