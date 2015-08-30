@@ -130,6 +130,7 @@ function descentControlConfig {
 	}.
 	set ptL to S:PARTSNAMED("winglet3"). ctlb(bool).
 	set ptL to S:PARTSNAMED("R8winglet"). ctlb(bool).
+	set ptL to S:PARTSNAMED("tailfin"). ctlb(bool).
 }. 
 function airControlsOff {
 	function ctlOff {

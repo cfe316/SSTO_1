@@ -15,6 +15,8 @@ set targetPeriapsis to 100*k.
 set desM to 17.565. // Design mass of the ship
 set thrCorrFac to MIN(1,(SM/desM)). // throttle de-rating factor so ship doesn't go too fast.
 
+set countStart to 12.
+
 //set ascent parameters -------------
 set n to 1/3.  // power law for curve; curve is the shape of y = x^n
 set Y0 to 800. // height at which th0 is specified for the initial ascent curve

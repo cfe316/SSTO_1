@@ -1,4 +1,4 @@
-// This script is to launch the SSTO2-0, an 35-ton, 9-ton-payload SSTO craft.
+// This script is to launch the SSTO3-0, an 80-ton, 22-ton-payload SSTO craft.
 copy lib from archive.
 run lib.
 
@@ -12,19 +12,19 @@ set tr to R(0,0,-90). //Make craft fly upright. Perhaps set to R(0,0,0) if you'r
 set targetApoapsis to 100*k.
 set targetPeriapsis to 100*k.
 
-set desM to 35. // Design mass of the ship
+set desM to 80. // Design mass of the ship
 set thrCorrFac to MIN(1,(SM/desM)). // throttle de-rating factor so ship doesn't go too fast.
 
 set countStart to 15.
 
 //set ascent parameters -------------
 set n to 1/3.  // power law for curve; curve is the shape of y = x^n
-set Y0 to 800. // height at which th0 is specified for the initial ascent curve
-set th0 to 12. // speedup pitch angle
-set th1 to 27. // climb pitch angle 
+set Y0 to 700. // height at which th0 is specified for the initial ascent curve
+set th0 to 16. // speedup pitch angle
+set th1 to 24. // climb pitch angle 
 set turn1R to 8*k. // radius of circular turn up 
 set Y2 to 22*k.
-set th2 to 25. // thrust climb pitch
+set th2 to 22. // thrust climb pitch
 set turn2R to 20*k. // radius of turn to thrust climb
 set rocketStart to 22*k.
 

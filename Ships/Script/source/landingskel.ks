@@ -1,5 +1,5 @@
 // landing scipt skeleton.
-// needs CorrectionLng to be supplied.
+// needs CorrectionLng, DPeri, and feather to be supplied.
 copy lib from archive.
 run lib.
 // Ship configuration info.
@@ -17,8 +17,6 @@ set prepLngAmount to 4. // amount of longitude needed to maneuver ship from prog
 set warpStopLng to BurnLng - prepLngAmount. // last place to stop warping at.
 set windowLngAmount to 5. // window of longitude to stop warping in.
 
-// assume current orbit is 100x100km.
-set DPeri to 45*k. // m. Desired periapsis.
 
 function prepBurn {
 	rokOn().
@@ -110,7 +108,7 @@ until mode = 0 {
 			SET WARP to 3.
 			SAS off.
 			set mode to mode + 1.
-			descentControlConfig(true).
+			descentControlConfig(feather).
 		}
 	}
 
@@ -140,10 +138,10 @@ until mode = 0 {
 				set VDes to -2.
 			}
 			if v < VDes {
-				set TVAL to MIN(TVAL + 0.05, 0.45).
+				set TVAL to MIN(TVAL + 0.05, 0.42).
 				wait 0.1.
 			} else if v > VDes {
-				set TVAL to MAX(TVAL - 0.02, 0.15).
+				set TVAL to MAX(TVAL - 0.03, 0.15).
 				wait 0.1.
 			}
 			set stat to S:STATUS.

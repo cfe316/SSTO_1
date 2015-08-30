@@ -21,10 +21,10 @@ WHEN ALTI > rocketStart THEN {
 	stage. // fire the rocket.
 
 	WHEN jet:FLAMEOUT THEN {
-		SET ptL to S:PARTSTITLED("Ram Air Intake").
-		for pt in ptL {
-			pt:GETMODULE("ModuleResourceIntake"):DOEVENT("close intake").
-		}
+		//SET ptL to S:PARTSTITLED("Ram Air Intake").
+		//for pt in ptL {
+		//	pt:GETMODULE("ModuleResourceIntake"):DOEVENT("close intake").
+		//}
 		// this nested WHEN will start checking after the first one happens.
 		// That way the CPU only has to check for one WHEN event at a time.
 		WHEN ALTI > 70010 THEN {
@@ -55,7 +55,7 @@ until mode = 0 {
 		lock throttle to 1. set TVAL to 1. wait 0.1.
 		stage.
 		PRINT "Counting down:".
-		FROM {local countdown is 12.} until countdown = 0 STEP {SET countdown to countdown -1.} DO {
+		FROM {local countdown is countStart.} until countdown = 0 STEP {SET countdown to countdown -1.} DO {
 			PRINT "..." + countdown.
 			WAIT 1.
 		}
