@@ -24,8 +24,8 @@ function turnDown { // a turn downward
 	}
 }.
 function circularizationTime {
-	set CA to APO + kr. // set currentApoapsis 
-	set semimaj to (CA + PER + kr)/2. 
+	set CA to APO + KR. // set currentApoapsis 
+	set semimaj to (CA + PER + KR)/2. 
 	set vDesired to SQRT(MU/CA).
 	set orbEn to -mu/(2 * semimaj).
 	set vApoCurrent to SQRT(2*(orbEn + MU/CA)).
@@ -37,7 +37,7 @@ function circularizationTime {
 function burnTimeNeeded {
 	set Da to (APO + DPeri + 2 * KR)/2. 
 	set CV to S:VELOCITY:ORBIT:MAG. // current velocity.
-	set CR to ALT + KR. // current radius.
+	set CR to ALTI + KR. // current radius.
 	set DV to SQRT(2 * mu *(1/CR - 1/(2*Da))). // desired velocity. not Delta V.
 	set deltaV to CV - DV.
 	set Acc to thrav() / SM. // acceleration.
@@ -46,7 +46,7 @@ function burnTimeNeeded {
 }.
 function timeAtBurnCenter {
 	set v to S:VELOCITY:ORBIT:MAG.
-	set rad to ALT+ KR.
+	set rad to ALTI + KR.
 	set lngPerSec to v * 360 / (2 * constant():PI * rad).
 	set lng to S:GEOPOSITION:LNG.
 	set DeltaLongitude to BurnLng - lng.

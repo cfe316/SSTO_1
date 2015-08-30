@@ -42,7 +42,7 @@ SAS off.
 RCS off.
 lock throttle to 0. // Throttle goes from 0.0 to 1.0
 gear off.
-set mode to 8.
+set mode to 1.
 set TVAL to 0.
 // This the the main prorgram loop. It runs until the program ends.
 until mode = 0 {
@@ -130,7 +130,7 @@ until mode = 0 {
 
 	else if mode = 10 {
 		if ALT:RADAR < 220 {
-			set v to VERTICALSPEED
+			set v to VERTICALSPEED.
 			set VDes to -5.
 			if ALT:RADAR < 30 {
 				set VDes to -2.
@@ -139,7 +139,7 @@ until mode = 0 {
 				set TVAL to MIN(TVAL + 0.05, 0.4).
 				wait 0.1.
 			} else if v > VDes {
-				set TVAL to MAX(TVAL - 0.02, 0.1).
+				set TVAL to MAX(TVAL - 0.02, 0.15).
 				wait 0.1.
 			}
 			set stat to S:STATUS.
