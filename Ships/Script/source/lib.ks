@@ -115,11 +115,22 @@ function openIntakes {
 	for pt in ptL {
 		set md to pt:GETMODULE("ModuleResourceIntake").
 		if md:GETFIELD("status") = "Closed" {
-			print "Opening intake!".
 			md:DOEVENT("open intake").
 		}
 	}
 }.
+function descentControlConfig {
+	parameter bool.
+	function ctlb {
+		parameter b.
+		for pt in ptL {
+			set md to pt:GETMODULE("ModuleControlSurface").
+			md:SETFIELD("state",b).
+		}
+	}.
+	set ptL to S:PARTSNAMED("winglet3"). ctlb(bool).
+	set ptL to S:PARTSNAMED("R8winglet"). ctlb(bool).
+}. 
 function airControlsOff {
 	function ctlOff {
 		for pt in ptL {

@@ -1,3 +1,5 @@
+// landing scipt skeleton.
+// needs CorrectionLng to be supplied.
 copy lib from archive.
 run lib.
 // Ship configuration info.
@@ -10,7 +12,7 @@ set tr to R(0,0,-90). //Make craft fly upright. Perhaps set to R(0,0,0) if you'r
 
 set KSCLng to -75.
 set TargetLng to KSCLng.
-set BurnLng to 180 + TargetLng + (98.75 + KSCLng). 
+set BurnLng to 180 + TargetLng + (CorrectionLng + KSCLng). 
 set prepLngAmount to 4. // amount of longitude needed to maneuver ship from prograde to retrograde.
 set warpStopLng to BurnLng - prepLngAmount. // last place to stop warping at.
 set windowLngAmount to 5. // window of longitude to stop warping in.
@@ -33,6 +35,7 @@ function prepLand{
 	openIntakes().
 	gear on.
 	chutes on.
+	descentControlConfig(false).
 }.
 
 // main script begin.
@@ -107,6 +110,7 @@ until mode = 0 {
 			SET WARP to 3.
 			SAS off.
 			set mode to mode + 1.
+			descentControlConfig(true).
 		}
 	}
 
@@ -136,7 +140,7 @@ until mode = 0 {
 				set VDes to -2.
 			}
 			if v < VDes {
-				set TVAL to MIN(TVAL + 0.05, 0.4).
+				set TVAL to MIN(TVAL + 0.05, 0.45).
 				wait 0.1.
 			} else if v > VDes {
 				set TVAL to MAX(TVAL - 0.02, 0.15).
