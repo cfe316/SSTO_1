@@ -5,8 +5,8 @@
 
 # This version works in Unix environments.
 
-# Run this file while being in your scripts directory. Please make a separate directory called "packed" - this
-# is where your modified scripts will go.
+# Run this file while being in your scripts directory. 
+# It will put the packed versions in the same directory as this script.
 
 FILES=`ls source/*.ks`
 echo $FILES
