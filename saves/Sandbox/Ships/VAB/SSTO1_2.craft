@@ -4423,7 +4423,7 @@ PART
 	dstg = 0
 	sidx = 0
 	sqor = 4
-	sepI = 5
+	sepI = 4
 	attm = 1
 	modCost = 0
 	modMass = 0
@@ -4596,7 +4596,7 @@ PART
 	dstg = 0
 	sidx = 1
 	sqor = 4
-	sepI = 5
+	sepI = 4
 	attm = 1
 	modCost = 0
 	modMass = 0
@@ -5496,7 +5496,7 @@ PART
 	symMethod = Radial
 	istg = 1
 	dstg = 4
-	sidx = 2
+	sidx = 1
 	sqor = 1
 	sepI = 1
 	attm = 0
@@ -5780,7 +5780,7 @@ PART
 	symMethod = Radial
 	istg = 1
 	dstg = 5
-	sidx = 1
+	sidx = 2
 	sqor = 1
 	sepI = 1
 	attm = 0
@@ -6213,7 +6213,6 @@ PART
 	link = batteryBank_4293958904
 	link = mediumDishAntenna_4293958356
 	link = mediumDishAntenna_4293958142
-	link = EngineerChip_4293957928
 	attN = top,batteryBank_4293958904
 	attN = bottom,batteryBank_4293960310
 	EVENTS
@@ -8138,73 +8137,6 @@ PART
 		IsRTCommandStation = False
 		EVENTS
 		{
-		}
-		ACTIONS
-		{
-		}
-	}
-}
-PART
-{
-	part = EngineerChip_4293957928
-	partName = Part
-	pos = 0.2857527,11.54721,-0.8034462
-	attPos = 0,0,0
-	attPos0 = -0.4340782,-0.0325737,-0.4340782
-	rot = -0.2705981,0.6532815,-0.6532816,-0.2705981
-	attRot = 0,0,0,1
-	attRot0 = -0.2705981,0.6532815,-0.6532816,-0.2705981
-	mir = 1,1,1
-	symMethod = Radial
-	istg = 6
-	dstg = 6
-	sidx = -1
-	sqor = -1
-	sepI = 1
-	attm = 1
-	modCost = 0
-	modMass = 0
-	modSize = (0.0, 0.0, 0.0)
-	srfN = srfAttach,fuelTankSmall_4293960280
-	EVENTS
-	{
-	}
-	ACTIONS
-	{
-	}
-	PARTDATA
-	{
-	}
-	MODULE
-	{
-		name = FlightEngineerModule
-		isEnabled = True
-		EVENTS
-		{
-		}
-		ACTIONS
-		{
-		}
-	}
-	MODULE
-	{
-		name = KOSNameTag
-		isEnabled = True
-		nameTag = 
-		EVENTS
-		{
-			PopupNameTagChanger
-			{
-				active = True
-				guiActive = True
-				guiActiveEditor = True
-				guiIcon = Change Name Tag
-				guiName = Change Name Tag
-				category = Change Name Tag
-				guiActiveUnfocused = False
-				unfocusedRange = 2
-				externalToEVAOnly = True
-			}
 		}
 		ACTIONS
 		{
