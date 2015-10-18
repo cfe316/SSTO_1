@@ -12,7 +12,7 @@ set tr to R(0,0,-90). //Make craft fly upright. Perhaps set to R(0,0,0) if you'r
 set targetApoapsis to 100*k.
 set targetPeriapsis to 100*k.
 
-set desM to 80. // Design mass of the ship
+set desM to 82. // Design mass of the ship
 set thrCorrFac to MIN(1,(SM/desM)). // throttle de-rating factor so ship doesn't go too fast.
 
 set countStart to 15.
