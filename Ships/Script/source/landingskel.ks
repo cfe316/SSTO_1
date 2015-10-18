@@ -1,4 +1,5 @@
-// landing scipt skeleton.
+// landing scipt skeleton. Is called by landingone.ks, landingtwo.ks, landingthree.ks
+// Do not run directly.
 // needs CorrectionLng, DPeri, and feather to be supplied.
 copy lib from archive.
 run lib.
@@ -8,7 +9,7 @@ lock ALTI to S:ALTITUDE.
 lock APO to S:APOAPSIS.
 lock PER to S:PERIAPSIS.
 
-set tr to R(0,0,-90). //Make craft fly upright. Perhaps set to R(0,0,0) if you're Eugene.
+set tr to R(0,0,-90). //Make craft fly upright.
 
 set KSCLng to -75.
 set TargetLng to KSCLng.
@@ -68,14 +69,14 @@ until mode = 0 {
 		set mode to mode + 1.
 	}
 
-	else if mode = 3 {
+	else if mode = 3 { // rotate for deorbit burn
 		lock steering to heading(-90,0) + tr. //set to retrograde. 
 		if TIME - burnStartTime > 0 {
 			set mode to mode + 1.
 		}
 	}
 
-	else if mode = 4 {
+	else if mode = 4 { // deorbit burn
 		set TVAL to 1.
 		lock steering to heading(-90,0) + tr.
 		if PER < DPeri {
@@ -83,7 +84,7 @@ until mode = 0 {
 		}
 	}
 
-	else if mode = 5 {
+	else if mode = 5 { // warp to the edge of the atmosphere
 		unlock steering.
 		SAS on.
 		set SASMODE to "RADIALIN".
@@ -95,24 +96,24 @@ until mode = 0 {
 		}
 	}
 
-	else if mode = 6 {
+	else if mode = 6 { // prepare for atmosphere
 		wait 1.
 		prepAtmo().
 		wait 1.
 		set mode to mode + 1.
 	}
 
-	else if mode = 7 {
+	else if mode = 7 { // start physics time warp once we get in the atmosphere
 		if ALTI < 69500 {
 			SET WARPMODE to "PHYSICS".
 			SET WARP to 3.
 			SAS off.
 			set mode to mode + 1.
-			descentControlConfig(feather).
+			descentControlConfig(feather). // note that 'feather' is supplied by the calling script
 		}
 	}
 
-	else if mode = 8 {
+	else if mode = 8 { // prepare to land
 		if ALT:RADAR < 2000 {
 			SET WARP to 0.
 			SAS ON.
@@ -122,7 +123,7 @@ until mode = 0 {
 		}
 	}
 
-	else if mode = 9 {
+	else if mode = 9 { // once the parachutes have fully opened
 		if ALT:RADAR < 400 {
 			antennaOn().
 			SAS off.
@@ -130,7 +131,7 @@ until mode = 0 {
 		}
 	}
 
-	else if mode = 10 {
+	else if mode = 10 { // start the powered landing
 		if ALT:RADAR < 220 {
 			set v to VERTICALSPEED.
 			set VDes to -5.

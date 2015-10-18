@@ -1,4 +1,5 @@
-// skeleton launch script.
+// skeleton launch script; is called by launchone.ks, launchtwo.ks, launchthree.ks
+// Do not directly call this script from the command line.
 // Assumes the first three stages like
 // 1) Jets
 // 2) Release launch clamps
@@ -83,7 +84,7 @@ until mode = 0 {
 		}
 	}
 
-	else if mode = 4 { // do the turn.
+	else if mode = 4 { // do a turn upward.
 		lock pitch to MIN(turnUp(ALTI),th1).
 		if ALTI > Y2 {
 			// Go to power climb
@@ -93,7 +94,7 @@ until mode = 0 {
 		}
 	}
 	
-	else if mode = 6 { // do the turn.
+	else if mode = 6 { // do a turn downward.
 		lock pitch to turnDown(ALTI).
 		if pitch < th2 {
 			// Go to thrust into orbit 
@@ -134,7 +135,7 @@ until mode = 0 {
 		}
 	}
 
-	else if mode = 11 {
+	else if mode = 11 { // warp to apoapsis
 		lock steering to heading(90,0) + tr.
 		lock TVAL to 0.
 		SET WARP TO 4.
@@ -147,7 +148,7 @@ until mode = 0 {
 		}
 	}
 
-	else if mode = 12 {
+	else if mode = 12 { // Thrust until periapsis is raised to desired value
 		if ETA:APOAPSIS < timeNeeded/2 or VERTICALSPEED < 0 {
 			set TVAL to 1.
 		}
@@ -164,6 +165,8 @@ until mode = 0 {
 		set mode to 0.
 	}
 
+	//Throttles down ship in the lower atmosphere if the mass is lower than the design weight.
+	//This prevents going too fast and overheating. 
 	if ALTI < 15*k {
 		lock throttle to TVAL * thrCorrFac.
 	} else {
