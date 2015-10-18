@@ -1,3 +1,4 @@
+// This is a 'library' file for both launching and landing, for all three ships.
 set MU to KERBIN:MU.
 set KR to KERBIN:RADIUS.
 set g to MU/KR^2.
