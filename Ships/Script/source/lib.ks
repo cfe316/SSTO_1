@@ -144,7 +144,7 @@ function airControlsOff {
 	set ptL to S:PARTSNAMED("winglet3"). ctlOff().
 	set ptL to S:PARTSNAMED("R8winglet"). ctlOff().
 	set ptL to S:PARTSNAMED("CanardController"). ctlOff().
-	set ptL to S:PARTSNAMED("tailfin"). ctlOff().
+	set ptL to S:PARTSTAGGED("feather"). ctlOff().
 }. 
 function popChutes {
 	set ptL to S:PARTSNAMED("parachuteRadial").
