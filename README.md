@@ -18,6 +18,8 @@ In order to use these scripts, put the `source` folder and the `pack.sh` script 
 this remove comments and extra lines from the source files so that the scripts can fit in 10kilocharacters, and places the files
 in the `Script` folder so that KOS can see them.
 
+The three ship files are named SSTO1_2.craft (Oxcart), SSTO2_0.craft (Pickup) and SSTO3_0.craft (U-Haul).
+
 ## Launch
 
 To use KOS to launch one of these rockets, run the scripts `launchone.ks` for Oxcart, `launchtwo.ks` for Pickup, or `launchthree.ks` for the U-Haul.
