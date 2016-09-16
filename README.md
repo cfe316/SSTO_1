@@ -1,4 +1,6 @@
 # Three SSTOs for use with KOS and RemoteTech
+(For use with KSP 1.0.4. Not tested in later versions.)
+
 Oxcart, Pickup, and U-Haul lift up to 4.5, 9, and 22 tons, resp., without a worry!
 These mid-career SSTO craft are programmed for hands-off takeoff from the launchpad to 100km circular orbit, and for also landing near KSC.
 
